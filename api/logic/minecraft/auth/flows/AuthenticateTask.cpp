@@ -78,6 +78,25 @@ QJsonObject AuthenticateTask::getRequestContent() const
 
 void AuthenticateTask::processResponse(QJsonObject responseData)
 {
+	if (isFake()) {
+		responseData = QJsonObject();
+		responseData["clientToken"] = m_account->clientToken();
+		responseData["accessToken"] = "3ef4a2e3a0f04476b2df1a0d910f4215";
+		QJsonObject profile;
+		profile["id"] = "ac53db2071dca5600dd5965d4572820d";
+		profile["name"] = m_account->username();
+		profile["legacy"] = false;
+		QJsonArray profiles;
+		profiles.append(profile);
+		responseData["availableProfiles"] = profiles;
+		QJsonObject sel_profile;
+		sel_profile["id"] = "ac53db2071dca5600dd5965d4572820d";
+		responseData["selectedProfile"] = sel_profile;
+		QJsonObject user;
+		user["id"] = "ac53db2071dca5600dd5965d4572820d";
+		responseData["user"] = user;
+	}
+
 	// Read the response data. We need to get the client token, access token, and the selected
 	// profile.
 	qDebug() << "Processing authentication response.";
@@ -199,4 +218,9 @@ QString AuthenticateTask::getStateMessage() const
 	default:
 		return YggdrasilTask::getStateMessage();
 	}
+}
+
+bool AuthenticateTask::isFake() const
+{
+	return true;
 }

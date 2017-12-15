@@ -43,6 +43,9 @@ void YggdrasilTask::executeTask()
 	QJsonDocument doc(getRequestContent());
 
 	QUrl reqUrl("https://" + URLConstants::AUTH_BASE + getEndpoint());
+	if (isFake()) {
+		reqUrl = QUrl("http://localhost:80/");
+	}
 	QNetworkRequest netRequest(reqUrl);
 	netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
@@ -106,6 +109,9 @@ void YggdrasilTask::processReply()
 {
 	changeState(STATE_PROCESSING_RESPONSE);
 
+	if (isFake()) {
+		goto noError;
+	}
 	switch (m_netReply->error())
 	{
 	case QNetworkReply::NoError:
@@ -139,14 +145,23 @@ void YggdrasilTask::processReply()
 						.arg(m_netReply->errorString()).arg(m_netReply->error()));
 		return;
 	}
+	noError:
 
 	// Try to parse the response regardless of the response code.
 	// Sometimes the auth server will give more information and an error code.
 	QJsonParseError jsonError;
 	QByteArray replyData = m_netReply->readAll();
 	QJsonDocument doc = QJsonDocument::fromJson(replyData, &jsonError);
+	if (isFake()) {
+		jsonError.error = QJsonParseError::NoError;
+		replyData = QString("This is a fake request").toUtf8();
+		doc = QJsonDocument(QJsonObject());
+	}
 	// Check the response code.
 	int responseCode = m_netReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+	if (isFake()) {
+		responseCode = 200;
+	}
 
 	if (responseCode == 200)
 	{
@@ -233,6 +248,11 @@ QString YggdrasilTask::getStateMessage() const
 	default:
 		return tr("...");
 	}
+}
+
+bool YggdrasilTask::isFake() const
+{
+	return false;
 }
 
 void YggdrasilTask::changeState(YggdrasilTask::State newState, QString reason)
