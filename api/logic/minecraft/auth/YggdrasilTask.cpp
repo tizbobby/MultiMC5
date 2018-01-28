@@ -109,9 +109,7 @@ void YggdrasilTask::processReply()
 {
 	changeState(STATE_PROCESSING_RESPONSE);
 
-	if (isFake()) {
-		goto noError;
-	}
+	if (!isFake()) {
 	switch (m_netReply->error())
 	{
 	case QNetworkReply::NoError:
@@ -145,7 +143,7 @@ void YggdrasilTask::processReply()
 						.arg(m_netReply->errorString()).arg(m_netReply->error()));
 		return;
 	}
-	noError:
+	}
 
 	// Try to parse the response regardless of the response code.
 	// Sometimes the auth server will give more information and an error code.

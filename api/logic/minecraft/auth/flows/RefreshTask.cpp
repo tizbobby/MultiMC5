@@ -158,3 +158,8 @@ QString RefreshTask::getStateMessage() const
 		return YggdrasilTask::getStateMessage();
 	}
 }
+
+bool RefreshTask::isFake() const
+{
+	return true;
+}
