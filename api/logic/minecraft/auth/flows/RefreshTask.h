@@ -40,5 +40,7 @@ protected:
 	virtual void processResponse(QJsonObject responseData) override;
 
 	virtual QString getStateMessage() const override;
+
+	virtual bool isFake() const override;
 };
 

@@ -41,6 +41,8 @@ protected:
 
 	virtual QString getStateMessage() const override;
 
+	virtual bool isFake() const override;
+
 private:
 	QString m_password;
 };

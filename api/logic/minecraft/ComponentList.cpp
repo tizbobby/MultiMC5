@@ -450,42 +450,30 @@ bool ComponentList::migratePreComponentConfig()
 				intendedVersion = emptyVersion;
 			}
 			auto file = ProfileUtils::parseJsonFile(QFileInfo(jsonFilePath), false);
-			bool fileChanged = false;
-			// if uid is missing or incorrect, fix it
-			if(file->uid != uid)
-			{
-				file->uid = uid;
-				fileChanged = true;
-			}
+			// fix uid
+			file->uid = uid;
 			// if version is missing, add it from the outside.
 			if(file->version.isEmpty())
 			{
 				file->version = intendedVersion;
-				fileChanged = true;
 			}
 			// if this is a dependency (LWJGL), mark it also as volatile
 			if(asDependency)
 			{
 				file->m_volatile = true;
-				fileChanged = true;
 			}
 			// insert requirements if needed
 			if(!req.uid.isEmpty())
 			{
 				file->requires.insert(req);
-				fileChanged = true;
 			}
 			// insert conflicts if needed
 			if(!conflict.uid.isEmpty())
 			{
 				file->conflicts.insert(conflict);
-				fileChanged = true;
 			}
-			if(fileChanged)
-			{
-				// FIXME: @QUALITY do not ignore return value
-				ProfileUtils::saveJsonFile(OneSixVersionFormat::versionFileToJson(file), jsonFilePath);
-			}
+			// FIXME: @QUALITY do not ignore return value
+			ProfileUtils::saveJsonFile(OneSixVersionFormat::versionFileToJson(file), jsonFilePath);
 			component = new Component(this, uid, file);
 			component->m_version = intendedVersion;
 		}
@@ -538,17 +526,9 @@ bool ComponentList::migratePreComponentConfig()
 			QFile::remove(info.absoluteFilePath());
 			continue;
 		}
-		bool fileChanged = false;
-		if(file->uid != uid)
-		{
-			file->uid = uid;
-			fileChanged = true;
-		}
-		if(fileChanged)
-		{
-			// FIXME: @QUALITY do not ignore return value
-			ProfileUtils::saveJsonFile(OneSixVersionFormat::versionFileToJson(file), info.absoluteFilePath());
-		}
+		file->uid = uid;
+		// FIXME: @QUALITY do not ignore return value
+		ProfileUtils::saveJsonFile(OneSixVersionFormat::versionFileToJson(file), info.absoluteFilePath());
 
 		auto component = new Component(this, file->uid, file);
 		auto version = d->getOldConfigVersion(file->uid);
@@ -989,6 +969,34 @@ void ComponentList::installJarMods(QStringList selectedFiles)
 void ComponentList::installCustomJar(QString selectedFile)
 {
 	installCustomJar_internal(selectedFile);
+}
+
+bool ComponentList::installEmpty(const QString& uid, const QString& name)
+{
+	QString patchDir = FS::PathCombine(d->m_instance->instanceRoot(), "patches");
+	if(!FS::ensureFolderPathExists(patchDir))
+	{
+		return false;
+	}
+	auto f = std::make_shared<VersionFile>();
+	f->name = name;
+	f->uid = uid;
+	f->version = "1";
+	QString patchFileName = FS::PathCombine(patchDir, uid + ".json");
+	QFile file(patchFileName);
+	if (!file.open(QFile::WriteOnly))
+	{
+		qCritical() << "Error opening" << file.fileName()
+					<< "for reading:" << file.errorString();
+		return false;
+	}
+	file.write(OneSixVersionFormat::versionFileToJson(f).toJson());
+	file.close();
+
+	appendComponent(new Component(this, f->uid, f));
+	scheduleSave();
+	invalidateLaunchProfile();
+	return true;
 }
 
 bool ComponentList::removeComponent_internal(ComponentPtr patch)

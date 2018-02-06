@@ -24,6 +24,7 @@
 
 #include "dialogs/CustomMessageBox.h"
 #include "dialogs/VersionSelectDialog.h"
+#include "dialogs/NewComponentDialog.h"
 #include "dialogs/ModEditDialogCommon.h"
 
 #include "dialogs/ProgressDialog.h"
@@ -402,43 +403,23 @@ void VersionPage::on_forgeBtn_clicked()
 	}
 }
 
-// TODO: use something like this... except the final decision of what to show has to be deferred until the lists are known
-/*
-void VersionPage::on_liteloaderBtn_clicked()
+void VersionPage::on_addEmptyBtn_clicked()
 {
-	QString uid = "com.mumfrey.liteloader";
-	auto vlist = ENV.metadataIndex()->get(uid);
-	if(!vlist)
+	NewComponentDialog compdialog(QString(), QString(), this);
+	QStringList blacklist;
+	for(int i = 0; i < m_profile->rowCount(); i++)
 	{
-		return;
+		auto comp = m_profile->getComponent(i);
+		blacklist.push_back(comp->getID());
 	}
-	VersionSelectDialog vselect(vlist.get(), tr("Select %1 version").arg(vlist->name()), this);
-	auto parentUid = vlist->parentUid();
-	if(!parentUid.isEmpty())
+	compdialog.setBlacklist(blacklist);
+	if (compdialog.exec())
 	{
-		auto parentvlist = ENV.metadataIndex()->get(parentUid);
-		vselect.setExactFilter(BaseVersionList::ParentVersionRole, m_profile->getComponentVersion(parentUid));
-		vselect.setEmptyString(
-			tr("No %1 versions are currently available for %2 %3")
-				.arg(vlist->name())
-				.arg(parentvlist->name())
-				.arg(m_profile->getComponentVersion(parentUid)));
-	}
-	else
-	{
-		vselect.setEmptyString(tr("No %1 versions are currently available"));
-	}
-	vselect.setEmptyErrorString(tr("Couldn't load or download the %1 version lists!").arg(vlist->name()));
-	if (vselect.exec() && vselect.selectedVersion())
-	{
-		auto vsn = vselect.selectedVersion();
-		m_profile->setComponentVersion(uid, vsn->descriptor());
-		m_profile->resolve();
-		preselect(m_profile->rowCount(QModelIndex())-1);
-		m_container->refreshContainer();
+		qDebug() << "name:" << compdialog.name();
+		qDebug() << "uid:" << compdialog.uid();
+		m_profile->installEmpty(compdialog.uid(), compdialog.name());
 	}
 }
-*/
 
 void VersionPage::on_liteloaderBtn_clicked()
 {
@@ -527,7 +508,7 @@ void VersionPage::onGameUpdateError(QString error)
 								 QMessageBox::Warning)->show();
 }
 
-ComponentPtr VersionPage::current()
+Component * VersionPage::current()
 {
 	auto row = currentRow();
 	if(row < 0)

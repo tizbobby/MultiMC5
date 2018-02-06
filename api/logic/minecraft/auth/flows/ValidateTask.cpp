@@ -59,3 +59,8 @@ QString ValidateTask::getStateMessage() const
 		return YggdrasilTask::getStateMessage();
 	}
 }
+
+bool ValidateTask::isFake() const
+{
+	return true;
+}

@@ -13,37 +13,36 @@
  * limitations under the License.
  */
 
-/*
- * :FIXME: DEAD CODE, DEAD CODE, DEAD CODE! :FIXME:
- */
-
 #pragma once
 
-#include "../YggdrasilTask.h"
+#include <QDialog>
 
-#include <QObject>
 #include <QString>
-#include <QJsonObject>
+#include <QStringList>
 
-/**
- * The validate task takes a MojangAccount and checks to make sure its access token is valid.
- */
-class ValidateTask : public YggdrasilTask
+namespace Ui
+{
+class NewComponentDialog;
+}
+
+class NewComponentDialog : public QDialog
 {
 	Q_OBJECT
+
 public:
-	ValidateTask(MojangAccount *account, QObject *parent = 0);
+	explicit NewComponentDialog(const QString & initialName = QString(), const QString & initialUid = QString(), QWidget *parent = 0);
+	virtual ~NewComponentDialog();
+	void setBlacklist(QStringList badUids);
 
-protected:
-	virtual QJsonObject getRequestContent() const override;
+	QString name() const;
+	QString uid() const;
 
-	virtual QString getEndpoint() const override;
-
-	virtual void processResponse(QJsonObject responseData) override;
-
-	virtual QString getStateMessage() const override;
-
-	virtual bool isFake() const override;
+private slots:
+	void updateDialogState();
 
 private:
+	Ui::NewComponentDialog *ui;
+
+	QString originalPlaceholderText;
+	QStringList uidBlacklist;
 };

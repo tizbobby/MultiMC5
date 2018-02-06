@@ -191,7 +191,6 @@ public:
 	TranslatedAction actionCopyInstance;
 	TranslatedAction actionLaunchInstanceOffline;
 	TranslatedAction actionScreenshots;
-	TranslatedAction actionInstanceSettings;
 	TranslatedAction actionExportInstance;
 	QVector<TranslatedAction *> all_actions;
 
@@ -366,7 +365,7 @@ public:
 		actionPatreon = TranslatedAction(MainWindow);
 		actionPatreon->setObjectName(QStringLiteral("actionPatreon"));
 		actionPatreon->setIcon(MMC->getThemedIcon("patreon"));
-		actionPatreon.setTextId(QT_TRANSLATE_NOOP("MainWindow", "Support us on Patreon!"));
+		actionPatreon.setTextId(QT_TRANSLATE_NOOP("MainWindow", "Support MultiMC"));
 		actionPatreon.setTooltipId(QT_TRANSLATE_NOOP("MainWindow", "Open the MultiMC Patreon page."));
 		all_actions.append(&actionPatreon);
 		mainToolBar->addAction(actionPatreon);
@@ -487,13 +486,6 @@ public:
 		actionEditInstance.setTooltipId(QT_TRANSLATE_NOOP("MainWindow", "Change the instance settings, mods and versions."));
 		all_actions.append(&actionEditInstance);
 		instanceToolBar->addAction(actionEditInstance);
-
-		actionInstanceSettings = TranslatedAction(MainWindow);
-		actionInstanceSettings->setObjectName(QStringLiteral("actionInstanceSettings"));
-		actionInstanceSettings.setTextId(QT_TRANSLATE_NOOP("MainWindow", "Instance Settings"));
-		actionInstanceSettings.setTooltipId(QT_TRANSLATE_NOOP("MainWindow", "Change the settings specific to the instance."));
-		all_actions.append(&actionInstanceSettings);
-		instanceToolBar->addAction(actionInstanceSettings);
 
 		actionEditInstNotes = TranslatedAction(MainWindow);
 		actionEditInstNotes->setObjectName(QStringLiteral("actionEditInstNotes"));
@@ -1247,7 +1239,15 @@ void MainWindow::runModalTask(Task *task)
 {
 	connect(task, &Task::failed, [this](QString reason)
 		{
-			CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Warning)->show();
+			CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->show();
+		});
+	connect(task, &Task::succeeded, [this, task]()
+		{
+			QStringList warnings = task->warnings();
+			if(warnings.count())
+			{
+				CustomMessageBox::selectable(this, tr("Warnings"), warnings.join('\n'), QMessageBox::Warning)->show();
+			}
 		});
 	ProgressDialog loadDialog(this);
 	loadDialog.setSkipButton(true, tr("Abort"));

@@ -121,6 +121,8 @@ protected:
 	 */
 	virtual QString getStateMessage() const;
 
+	virtual bool isFake() const;
+
 protected
 slots:
 	void processReply();

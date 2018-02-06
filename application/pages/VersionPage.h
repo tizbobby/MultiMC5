@@ -50,6 +50,7 @@ public:
 
 private slots:
 	void on_forgeBtn_clicked();
+	void on_addEmptyBtn_clicked();
 	void on_liteloaderBtn_clicked();
 	void on_reloadBtn_clicked();
 	void on_removeBtn_clicked();
@@ -67,7 +68,7 @@ private slots:
 	void on_changeVersionBtn_clicked();
 
 private:
-	ComponentPtr current();
+	Component * current();
 	int currentRow();
 	void updateButtons(int row = -1);
 	void preselect(int row = 0);
